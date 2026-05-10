@@ -1,0 +1,39 @@
+version: '3.8'
+services:
+  eureka-server:
+    build: ./eureka-server
+    ports:
+      - "8761:8761"
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+
+  microservicio-vehiculos:
+    build: ./microservicio-vehiculos
+    depends_on:
+      - eureka-server
+      - db-vehiculos
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db-vehiculos:3306/alquiler_db
+
+  microservicio-operaciones:
+    build: ./microservicio-operaciones
+    depends_on:
+      - eureka-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+
+  db-vehiculos:
+    image: mysql:8.0
+    environment:
+      - MYSQL_DATABASE=alquiler_db
+      - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - "3307:3306"
