@@ -2,7 +2,10 @@
 FROM maven:3.8.5-openjdk-17 AS build
 WORKDIR /app
 COPY pom.xml .
+# Descarga las dependencias primero para que se guarden en caché
+RUN mvn dependency:go-offline -B
 COPY src ./src
+# Ahora el paquete se compila usando las dependencias ya descargadas
 RUN mvn clean package -DskipTests
 
 # Etapa 2: Ejecución (Run)
