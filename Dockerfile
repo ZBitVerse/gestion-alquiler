@@ -4,13 +4,15 @@ WORKDIR /app
 COPY pom.xml .
 # Descarga las dependencias primero para que se guarden en caché
 RUN mvn dependency:go-offline -B
-COPY src ./src
+COPY src ./src/
 # Ahora el paquete se compila usando las dependencias ya descargadas
 RUN mvn clean package -DskipTests
+# Buscamos el JAR ejecutable (excluyendo el 'plain') y lo renombramos para que la copia sea segura
+RUN find target/ -maxdepth 1 -name "*.jar" ! -name "*-plain.jar" -exec cp {} /app/app.jar \;
 
 # Etapa 2: Ejecución (Run)
 FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
-COPY --from=build /app/target/gestion-alquiler-*.jar app.jar
+COPY --from=build /app/app.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/app.jar"]
